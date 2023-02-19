@@ -1,16 +1,15 @@
 package com.example.composenoteapp.ui.noteslist
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import com.example.composenoteapp.model.Note
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -23,15 +22,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.composenoteapp.R
+import com.example.composenoteapp.ui.destinations.EditNoteDestination
+import com.example.composenoteapp.ui.destinations.MainScreenDestination
 import com.example.composenoteapp.ui.destinations.PreviewNoteDestination
+import com.example.composenoteapp.ui.destinations.SearchNotesDestination
 import com.example.composenoteapp.ui.theme.*
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
@@ -40,7 +45,8 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 @Composable
 fun NotesList(
     nav: DestinationsNavigator,
-    viewModel: NotesListViewModel = hiltViewModel()
+    viewModel: NotesListViewModel = hiltViewModel(),
+    showSearchEmpty:Boolean=false
 ) {
     val list = listOf(
         Bink,
@@ -57,13 +63,26 @@ fun NotesList(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
+                val emptyText= remember {
+                    mutableStateOf("")
+                }
+                val emptyImage= remember {
+                    mutableStateOf(0)
+                }
+                if(showSearchEmpty){
+                    emptyText.value="File not found. Try searching again."
+                    emptyImage.value = R.drawable.cuate
+                }else{
+                    emptyText.value="Create your first note!"
+                    emptyImage.value = R.drawable.rafiki
+                }
                 Image(
                     modifier = Modifier.size(350.dp, 286.dp),
-                    painter = painterResource(id = R.drawable.rafiki),
+                    painter = painterResource(id = emptyImage.value),
                     contentDescription = "Empty Note Image"
                 )
                 Text(
-                    text = "Create your first note!",
+                    text = emptyText.value,
                     style = TextStyle(
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Light,
@@ -93,7 +112,8 @@ fun NotesList(
                         ){
                             Icon(
                                 Icons.Filled.Delete,
-                                modifier = Modifier.padding(20.dp)
+                                modifier = Modifier
+                                    .padding(20.dp)
                                     .size(49.dp),
                                 tint = Color.White,
                                 contentDescription = "Delete Note"
@@ -104,7 +124,9 @@ fun NotesList(
                         NoteCard(
                             note = note,
                             color = list[index % 5],
-                            onCardClick = {},
+                            onCardClick = {
+                                nav.navigate(PreviewNoteDestination(note=note,false))
+                            },
                             onCardLongClick = {
                                 isDelete.value = true
                             }
@@ -124,15 +146,9 @@ fun NotesList(
 
         FloatingActionButton(
             onClick = {
-                      nav.navigate(PreviewNoteDestination)
-//                viewModel.addNote(
-//                    Note(
-//                        title = "Derar Note",
-//                        content = ""
-//                    )
-//                )
+                      nav.navigate(EditNoteDestination(note= Note(title = "", content = "", color = Green.value.toLong()),true))
             },
-            backgroundColor = Black,
+            backgroundColor = Gray,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(10.dp)
@@ -175,7 +191,7 @@ fun NoteCard(
             )
             .fillMaxWidth()
             .padding(24.dp, 12.dp),
-        backgroundColor = color
+        backgroundColor = Color(note.color.toULong())
     ) {
         content()
     }
@@ -185,53 +201,131 @@ fun NoteCard(
 @Destination(start = true)
 @Composable
 fun MainScreen(
-    nav:DestinationsNavigator
+    nav:DestinationsNavigator,
+    viewModel: NotesListViewModel= hiltViewModel()
 ) {
+    val isSearch = remember {
+        mutableStateOf(false)
+    }
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .clickable {
+                isSearch.value = false
+            }
     ) {
         val openDialog = remember { mutableStateOf(false)  }
-        Row(
-            modifier = Modifier.padding(30.dp, 30.dp),
-            horizontalArrangement = Arrangement.SpaceAround
-        ) {
-            Text(
-                modifier = Modifier.weight(1f),
-                text = "Notes",
-                style = TextStyle(
-                    fontSize = 42.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.White
-                )
-            )
-            Row(
-                modifier = Modifier.weight(1f),
-                horizontalArrangement = Arrangement.End
+
+        AnimatedVisibility(isSearch.value) {
+            val searchText = remember {
+                mutableStateOf("")
+            }
+            Card(
+                modifier = Modifier.padding(30.dp, 30.dp),
+                shape = RoundedCornerShape(45.dp),
             ) {
-                Button(modifier = Modifier
-                    .size(50.dp),
-                    shape = RoundedCornerShape(15.dp),
-                    onClick = {}
-                ){
-                    Icon(
-                        Icons.Outlined.Search,
-                        modifier = Modifier.size(24.dp),
-                        contentDescription = "Search"
-                    )
-                }
-                Spacer(modifier = Modifier.padding(5.dp))
-                Button(modifier = Modifier
-                    .size(50.dp),
-                    shape = RoundedCornerShape(15.dp),
-                    onClick = {
-                        openDialog.value = true
+                Card(
+                    modifier = Modifier
+                        .padding(1.dp)
+                        .fillMaxWidth(),
+                    shape = RoundedCornerShape(45.dp),
+                    backgroundColor = Black
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedTextField(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(25.dp, 0.dp, 10.dp, 0.dp),
+                            value = searchText.value,
+                            colors = TextFieldDefaults.textFieldColors(
+                                textColor = TextGray,
+                                disabledTextColor = Black,
+                                backgroundColor = Black,
+                                focusedIndicatorColor = Black,
+                                unfocusedIndicatorColor = Black,
+                                disabledIndicatorColor = Black,
+                                cursorColor = TextGray
+                            ),
+                            onValueChange = {
+                                searchText.value = it
+                                viewModel.getNotes(it)
+                            },
+                            placeholder = {
+                                Text(text = "Search by the keyword...",
+                                color = TextGray)
+                            },
+                            trailingIcon = {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.close) ,
+                                    modifier = Modifier
+                                        .size(24.dp)
+                                        .clickable {
+                                            searchText.value = ""
+                                            viewModel.getNotes()
+                                        },
+                                    tint = Color.White,
+                                    contentDescription = ""
+                                )
+                            },
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                            keyboardActions = KeyboardActions(
+                                onSearch = {
+                                    isSearch.value=false
+                                }
+                            )
+                        )
                     }
-                ){
-                    Icon(
-                        Icons.Outlined.Info,
-                        modifier = Modifier.size(24.dp),
-                        contentDescription = "Search"
+                }
+            }
+        }
+        AnimatedVisibility(!isSearch.value) {
+            Row(
+                modifier = Modifier.padding(30.dp, 30.dp),
+                horizontalArrangement = Arrangement.SpaceAround
+            ) {
+                Text(
+                    modifier = Modifier.weight(1f),
+                    text = "Notes",
+                    style = TextStyle(
+                        fontSize = 42.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White
                     )
+                )
+                Row(
+                    modifier = Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Button(modifier = Modifier
+                        .size(50.dp),
+                        shape = RoundedCornerShape(15.dp),
+                        onClick = {
+                           isSearch.value=true
+                        }
+                    ) {
+                        Icon(
+                            Icons.Outlined.Search,
+                            modifier = Modifier.size(24.dp),
+                            contentDescription = "Search"
+                        )
+                    }
+                    Spacer(modifier = Modifier.padding(5.dp))
+                    Button(modifier = Modifier
+                        .size(50.dp),
+                        shape = RoundedCornerShape(15.dp),
+                        onClick = {
+                            openDialog.value = true
+                        }
+                    ) {
+                        Icon(
+                            Icons.Outlined.Info,
+                            modifier = Modifier.size(24.dp),
+                            contentDescription = "Search"
+                        )
+                    }
                 }
             }
         }
@@ -241,7 +335,8 @@ fun MainScreen(
             }
         }
         NotesList(
-            nav = nav
+            nav = nav,
+            showSearchEmpty = isSearch.value
         )
     }
 }
@@ -250,6 +345,8 @@ fun MainScreen(
 @Composable
 fun ShowInfoAlert(onDismiss:()->Unit){
     AlertDialog(
+        shape = RoundedCornerShape(15.dp),
+        backgroundColor = Black,
         onDismissRequest = {
             // Dismiss the dialog when the user clicks outside the dialog or on the back
             // button. If you want to disable that functionality, simply use an empty
@@ -257,28 +354,28 @@ fun ShowInfoAlert(onDismiss:()->Unit){
             onDismiss()
         },
         title = {
-            Text(text = "Dialog Title")
         },
         text = {
-            Text("Here is a text ")
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                val textStyle = TextStyle(fontSize = 15.sp)
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Designed by -  ", color = TextGray, style = textStyle)
+                    Text("Redesigned by - ", color = TextGray, style = textStyle)
+                    Text("Illustrations -", color = TextGray, style = textStyle)
+                    Text("Icons -", color = TextGray, style = textStyle)
+                    Text("Font -", color = TextGray, style = textStyle)
+                }
+                Text("Made by", color = TextGray, style = textStyle)
+            }
         },
         confirmButton = {
-            Button(
-
-                onClick = {
-                    onDismiss()
-                }) {
-                Text("This is the Confirm Button")
-            }
         },
         dismissButton = {
-            Button(
-
-                onClick = {
-                    onDismiss()
-                }) {
-                Text("This is the dismiss Button")
-            }
         }
     )
 }

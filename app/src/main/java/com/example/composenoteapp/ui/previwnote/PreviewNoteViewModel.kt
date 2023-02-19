@@ -7,6 +7,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.composenoteapp.model.Note
 import com.example.composenoteapp.model.NotesDatabase
+import com.example.composenoteapp.ui.theme.Black
+import com.example.composenoteapp.ui.theme.Green
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -18,7 +20,7 @@ class PreviewNoteViewModel @Inject constructor(
     val  db:NotesDatabase
 ): ViewModel() {
 
-    var note by mutableStateOf<Note>(Note(title = "", content = ""))
+    var note by mutableStateOf<Note>(Note(title = "", content = "", color = Green.value.toLong()))
         private set
 
 

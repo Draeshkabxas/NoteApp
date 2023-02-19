@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import javax.inject.Singleton
 
 
 @HiltViewModel
@@ -42,5 +43,14 @@ class NotesListViewModel @Inject constructor(
         viewModelScope.launch {
             db.dao.deleteNote(note)
         }
+    }
+
+    fun getNotes(search:String){
+        db.dao.getNotes().onEach { notesList->
+            notes =notesList.filter {
+                it.title.contains(search) ||
+                        it.content.contains(search)
+            }
+        }.launchIn(viewModelScope)
     }
 }

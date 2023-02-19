@@ -19,5 +19,12 @@ class EditNoteViewModel @Inject constructor(
         }
     }
 
+    fun addNote(note: Note){
+        viewModelScope.launch {
+            db.dao.insertNote(note)
+        }
+    }
+
+
 
 }

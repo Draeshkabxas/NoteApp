@@ -23,4 +23,5 @@ val Blue= Color(0xFF9EFFFF)
 val Purple= Color(0xFFB69CFF)
 
 val Red= Color(0xFFFF0000)
+val TextGray= Color(0xFFCCCCCC)
 

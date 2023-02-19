@@ -23,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.composenoteapp.model.Note
 import com.example.composenoteapp.ui.destinations.EditNoteDestination
 import com.example.composenoteapp.ui.destinations.MainScreenDestination
 import com.ramcosta.composedestinations.annotation.Destination
@@ -32,7 +33,9 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 @Composable
 fun PreviewNote(
     nav: DestinationsNavigator,
-    viewModel: PreviewNoteViewModel = hiltViewModel()
+    viewModel: PreviewNoteViewModel = hiltViewModel(),
+    note: Note,
+    isNewNote:Boolean
 ){
     Column(
         modifier = Modifier.fillMaxSize()
@@ -63,7 +66,7 @@ fun PreviewNote(
                     .size(50.dp),
                     shape = RoundedCornerShape(15.dp),
                     onClick = {
-                       nav.navigate(EditNoteDestination)
+                       nav.navigate(EditNoteDestination(note,isNewNote))
                     }
                 ) {
                     Icon(
@@ -78,7 +81,7 @@ fun PreviewNote(
             modifier = Modifier.padding(30.dp,0.dp)
                     .verticalScroll(rememberScrollState())
         ) {
-            Text(text = "Book Review : The Design of Everyday Things by Don Norman",
+            Text(text = note.title,
                 modifier = Modifier.padding(0.dp,0.dp,23.dp,0.dp),
                 style = TextStyle(
                     fontSize = 35.sp,
@@ -86,11 +89,7 @@ fun PreviewNote(
                 )
             )
             Spacer(modifier = Modifier.padding(7.dp))
-            Text(text = "The Design of Everyday Things is required reading for anyone who is interested in the user experience. I personally like to reread it every year or two.\n" +
-                    "\n" +
-                    "Norman is aware of the durability of his work and the applicability of his principles to multiple disciplines. \n" +
-                    "\n" +
-                    "If you know the basics of design better than anyone else, you can apply them flawlessly anywhere.",
+            Text(text = note.content,
                 style = TextStyle(
                     fontSize = 23.sp,
                     color = Color.White
