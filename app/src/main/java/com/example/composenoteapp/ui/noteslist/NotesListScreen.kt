@@ -191,7 +191,7 @@ fun NoteCard(
             )
             .fillMaxWidth()
             .padding(24.dp, 12.dp),
-        backgroundColor = Color(note.color.toULong())
+        backgroundColor = if(color== Red)Red else Color(note.color.toULong())
     ) {
         content()
     }
